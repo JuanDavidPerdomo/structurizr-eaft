@@ -41,27 +41,27 @@ workspace {
                 }
             }
             pagos = container "Pagos Terceros" {
-                controladorPagoTercero = component "Realizar pago tercero" {
+                controladorPagoTercero = component "Realizar pago tercero" "Este componente se encarga de recibir y procesar las solicitudes de pago de los usuarios" "Java + Spring Boot"{
                     mobileApp -> this "Uses"
                     webApp -> this "Uses"
                 }
-                procesarPago = component "Broker procesar pago"{
+                procesarPago = component "Broker procesar pago" "Este componente maneja la comunicación y el procesamiento de pagos en tiempo real" "RabbitMQ" {
                     controladorPagoTercero -> this
                 }
-                 validarPago = component "Validar pago"{
+                 validarPago = component "Validar pago" "Este componente valida los detalles del pago antes de procesarlo" "Java + Spring Boot"{
                      procesarPago -> this
 
                 }
-                almacenarPago = component "Almacenar pago"{
+                almacenarPago = component "Almacenar pago" "Este componente almacena los detalles de los pagos." "Oracle"{
                     procesarPago -> this
                     validarPago -> this
                 }
-                pagoExterno = component "Integrador Pasarelas de pagos externa"{
+                pagoExterno = component "Integrador Pasarelas de pagos externa" "Este componente se integra con pasarelas de pago externas para procesar los pagos" "Stripe"{
                     procesarPago -> this
                     
                 # Este servicio tambien se relaciona con transferencias
                 }
-                serviciosTerceros = component "Integrador servicios externos"{
+                serviciosTerceros = component "Integrador servicios externos" "Este componente se encarga de la integración con otros servicios externos necesarios para el procesamiento de pagos" "GraphQL"{
                     procesarPago -> this
                 }
                 
@@ -115,45 +115,42 @@ workspace {
                 }
             }
             
-            pagosNomina = container "Pagos de Nómina" {
-                controladorPagoNomina = component "Servicio de Pago de Nómina" {
-                    mobileApp -> this "Uses"
-                    webApp -> this "Uses"
-                }
-                
-                validarEmpleadosEmpresa = component "Validar Empleados de Empresa" 
-                
-                procesarPagoNomina = component "Procesar Pago de Nómina" {
-                    controladorPagoNomina -> this
-                }
-                
-                registrarPagoNomina = component "Registrar Pago de Nómina" {
-                    procesarPagoNomina -> this
-                }
-                
-                programarPagoNomina = component "Programar Pago de Nómina" {
-                    procesarPagoNomina -> this
-                }
-            
-                cargaMasivaNomina = component "Carga Masiva de Empleados" {
-                    procesarPagoNomina -> this 
-                    this -> validarEmpleadosEmpresa
-                }
-            
-                brokerPagosNomina = component "Broker Pagos de Nómina" {
-                    procesarPagoNomina -> this
-                    
-                }
-            
-                
-            
-                pagoNomina = component "Pago de Nómina Masiva" {
-                    brokerPagosNomina -> this
-                    programarPagoNomina -> this
-                }
-                
-                
-            }
+            pagosNomina = container "Pagos de Nómina" "Componente encargado de gestionar los pagos de nómina a los empleados, permitiendo tanto pagos programados como masivos" "Java + Spring Boot" {
+    
+				controladorPagoNomina = component "Servicio de Pago de Nómina" "Orquesta y coordina los pagos de nómina, integrando tanto la aplicación web como la móvil para la gestión y autorización de los pagos." "Java + Spring Boot" {
+					mobileApp -> this "Uses"
+					webApp -> this "Uses"
+				}
+				
+				validarEmpleadosEmpresa = component "Validar Empleados de Empresa" "Verifica que los empleados estén correctamente registrados y habilitados para recibir pagos de nómina, validando los datos con la empresa." "Java + Spring Boot"
+				
+				procesarPagoNomina = component "Procesar Pago de Nómina" "Maneja el cálculo y la distribución de los pagos de nómina, asegurando que las transacciones se realicen correctamente y a tiempo." "Java + Spring Boot" {
+					controladorPagoNomina -> this
+				}
+				
+				registrarPagoNomina = component "Registrar Pago de Nómina" "Documenta y registra cada transacción de pago de nómina, asegurando un historial preciso y auditable de los pagos realizados." "Java + Spring Boot" {
+					procesarPagoNomina -> this
+				}
+				
+				programarPagoNomina = component "Programar Pago de Nómina" "Permite a la empresa programar pagos de nómina futuros, automatizando la ejecución de estos en fechas predefinidas." "Java + Spring Boot" {
+					procesarPagoNomina -> this
+				}
+				
+				cargaMasivaNomina = component "Carga Masiva de Empleados" "Facilita la carga y validación masiva de empleados para los pagos de nómina, incluyendo la verificación de sus datos y estatus." "Java + Spring Boot + Apache Kafka" {
+					procesarPagoNomina -> this 
+					this -> validarEmpleadosEmpresa
+				}
+				
+				brokerPagosNomina = component "Broker Pagos de Nómina" "Centraliza la comunicación y coordinación de los pagos de nómina, especialmente en casos de pagos masivos y programados." "Java + Spring Boot + Apache Kafka" {
+					procesarPagoNomina -> this
+				}
+				
+				pagoNomina = component "Pago de Nómina Masiva" "Gestiona la ejecución de pagos de nómina a gran escala, integrando las funcionalidades de programación y carga masiva para eficiencia operativa." "Java + Spring Boot + Apache Kafka" {
+					brokerPagosNomina -> this
+					programarPagoNomina -> this
+				}
+			}
+
             
             autorizaciones = container "Autorizaciones" {
                 webApp -> this
