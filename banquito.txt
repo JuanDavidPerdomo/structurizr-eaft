@@ -73,22 +73,6 @@ workspace {
                 
             }
             
-            reportes = container "Reportes" "Permite la construcción y disponibilización automática de los reportes" "Apache Airflow" {
-                reporteTrimestralPersonas = component "Reporte Trimestral Personas Naturales"{
-                    procesarPago -> this
-                    brokerBancoAliado -> this 
-                }
-                reporteTrimestralEmpresas = component "Reporte Trimestral Personas Jurídicas"{
-                    procesarPago -> this
-                    brokerBancoAliado -> this 
-                }
-                reporteSemestralSuper = component "Reporte Semestral Superintendencia Financiera"{
-                    procesarPago -> this
-                    brokerBancoAliado -> this 
-                }
-                
-            }
-            
             gestionDeUsuarios = container "Gestion de Usuarios" {
                 controladorUsuarios = component "Controlador Nuevo Usuario" {
                     mobileApp -> this "Uses"
@@ -163,7 +147,24 @@ workspace {
 				cacheNomina = component "Base de Datos Cache Transferencias" "Otorga una caoa de cache para velocidad en las transferencias" "Redis"
 			}
 
-            
+            reportes = container "Reportes" "Permite la construcción y disponibilización automática de los reportes" "Apache Airflow" {
+                reporteTrimestralPersonas = component "Reporte Trimestral Personas Naturales"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                }
+                reporteTrimestralEmpresas = component "Reporte Trimestral Personas Jurídicas"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                }
+                reporteSemestralSuper = component "Reporte Semestral Superintendencia Financiera"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                }
+                
+            }
             autorizaciones = container "Autorizaciones" {
                 policyEngine = component "Policy Engine (OPA - Open Policy Agent)" "motor de políticas que permita gestionar las reglas de autorización de manera dinámica, permitiendo una mayor flexibilidad y control." "Auth0"
 				BaseDatosNoSql = component "Base Datos No Sql" "Para almacenar grandes volúmenes de datos de autorizaciones y auditoría" "MongoDB"
@@ -198,7 +199,39 @@ workspace {
                 gestionDeUsuarios -> this
             }
             
+            sincronizacion = container "sincronización de Datos de Clientes"{
+                sincPersonasNaturales = component "Sincronización de Datos de Personas Naturales" "Recopila y sincroniza los datos de las personas naturales para mantener la integranción en las diferentes capas de persistencia de datos de los MS" "Java + Spring Boot"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                    gestionDeUsuarios -> this
+                }
+                sincPersonasJuridicas = component "Sincronización de Datos de Personas Jurídicas" "Recopila y sincroniza los datos de las personas jurídicas para mantener la integranción en las diferentes capas de persistencia de datos de los MS" "Java + Spring Boot"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                    gestionDeUsuarios -> this
+                }
+                sincTecerosAliados = component "Sincronización de Datos de Entidades Aliadas" "Recopila y sincroniza los datos de las entidades aliadas para mantener la integranción en las diferentes capas de persistencia de datos de los MS" "Java + Spring Boot"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                    gestionDeUsuarios -> this
+                }
+                sincOutputBroker = component "Broker de Mensajería para Datos Sincronizados" "Disponibiliza el resultado de la sincronización de datos de las diferentes verticales para mantener la integración en las diferentes capas de persistencia de datos de los MS" "Apache Kafka"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this
+                    brokerPagosNomina -> this
+                    gestionDeUsuarios -> this
+                }
+                
+            }
+            
             pagoNomina -> realizarTransferencia
+            sincOutputBroker -> procesarPago
+            sincOutputBroker -> brokerBancoAliado
+            sincOutputBroker -> brokerPagosNomina
+            sincOutputBroker -> gestionDeUsuarios
 
         }
         bancoAliadoSystem = softwareSystem "Banco Aliado Sistema"
