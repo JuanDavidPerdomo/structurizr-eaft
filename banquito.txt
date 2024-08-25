@@ -13,27 +13,31 @@ workspace {
                 user -> this "Uses"
                 empresa -> this "empresa"
             }
-            transferencias = container "Transferencias" {
-                realizarTransferencia = component "Realizar Transferencia" {
+            transferencias = container "Transferencias" "Componente encargado de todas las transferencias de dinero entre cuentas, ya sea con alidos o externos" "Tecnologia" {
+                realizarTransferencia = component "Realizar Transferencia" "Gestiona el proceso de iniciar y coordinar una transferencia de dinero entre cuentas, incluyendo la validación inicial y la selección del tipo de transferencia (aliado o externo)." "Java + Spring Boot" {
                     mobileApp -> this "Uses"
                     webApp -> this "Uses"
                 }
-                validarCuenta = component "Validar Cuenta"
-                tranferenciaBancoAliado = component "Transferencia Banco Aliado" {
+                validarCuenta = component "Validar Cuenta" "Se encarga de verificar que las cuentas involucradas en la transferencia estén activas y cumplan con las políticas de seguridad antes de proceder con la transferencia." "Java + Spring Boot" {
+                    realizarTransferencia -> this 
+                }
+                tranferenciaBancoAliado = component "Transferencia Banco Aliado" "Maneja la comunicación y la ejecución de transferencias hacia cuentas en bancos aliados, asegurando la correcta aplicación de débitos y acreditaciones." "Java + Spring Boot" {
                     realizarTransferencia -> this
                 }
-                transferenciaBancoExterno = component "Transferencia Banco Externo"{
+                transferenciaBancoExterno = component "Transferencia Banco Externo" "Gestiona las transferencias hacia cuentas en bancos externos, incluyendo la coordinación con sistemas ACH o similares para completar la transacción." "Java + Spring Boot" {
                     realizarTransferencia -> this
                 }
-                realizarDebitoBancoAliado = component  "Realizar Debito BancoAliado"
-                confirmarDebitoBancoAliado = component "confirmar Debito BancoAliado"
-                realizarAcreditacionBancoAliado = component "Realizar Acreditacion BancoAliado" 
-                confirmarAcreditacionBancoAliado  = component "Confirmar Acreditacion BancoAliado"
-                brokerBancoAliado = component "Broker Comunicacion Banco Aliado" {
+                realizarDebitoBancoAliado = component "Realizar Débito Banco Aliado" "Inicia el proceso de débito en las cuentas del banco aliado, preparando los fondos para la transferencia." "Java + Spring Boot"
+                confirmarDebitoBancoAliado = component "Confirmar Débito Banco Aliado" "Verifica y confirma que el débito se ha realizado correctamente en el banco aliado antes de proceder con la acreditación." "Java + Spring Boot"
+                realizarAcreditacionBancoAliado = component "Realizar Acreditación Banco Aliado" "Gestiona la acreditación de fondos en la cuenta de destino dentro de un banco aliado, finalizando la transferencia." "Java + Spring Boot" 
+                confirmarAcreditacionBancoAliado  = component "Confirmar Acreditación Banco Aliado" "Confirma que la acreditación de fondos se ha realizado exitosamente en el banco aliado, cerrando el ciclo de la transferencia." "Java + Spring Boot"
+                brokerBancoAliado = component "Broker Comunicación Banco Aliado" "Centraliza y orquesta la comunicación entre el sistema de transferencias y los bancos aliados, asegurando la secuencia correcta de débitos y acreditaciones." "Java + Spring Boot + Apache Kafka" {
                     realizarDebitoBancoAliado -> this
                     confirmarDebitoBancoAliado -> this
                     realizarAcreditacionBancoAliado -> this
                     confirmarAcreditacionBancoAliado -> this
+                    tranferenciaBancoAliado -> this
+                    transferenciaBancoExterno -> this
                 }
             }
             pagos = container "Pagos Terceros" {
@@ -193,9 +197,9 @@ workspace {
         }
         
         banquitoSystem -> bancoAliadoSystem
-        banquitoSystem -> achAliadosystem
         banquitoSystem -> superFinanciera
         bancoAliadoSystem -> brokerBancoAliado
+        transferenciaBancoExterno  -> achAliadosystem
     }
 
     views {
