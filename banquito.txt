@@ -39,6 +39,9 @@ workspace {
                     tranferenciaBancoAliado -> this
                     transferenciaBancoExterno -> this
                 }
+                serviceMeshTransferencias = component "Service Mesh Transferencias" "Malla de servicios para la gestión de la comunicación entre microservicios" "Istio"
+				baseDatosTransferencias = component "Base de Datos Transferencias" "Se encarga de almacenar las transferencias" "Oracle"
+				cacheTransferencias = component "Base de Datos Cache Transferencias" "Otorga una caoa de cache para velocidad en las transferencias" "Redis"
             }
             pagos = container "Pagos Terceros" {
                 controladorPagoTercero = component "Realizar pago tercero" "Este componente se encarga de recibir y procesar las solicitudes de pago de los usuarios" "Java + Spring Boot"{
@@ -64,6 +67,9 @@ workspace {
                 serviciosTerceros = component "Integrador servicios externos" "Este componente se encarga de la integración con otros servicios externos necesarios para el procesamiento de pagos" "GraphQL"{
                     procesarPago -> this
                 }
+                serviceMeshPagos = component "Service Mesh Transferencias" "Malla de servicios para la gestión de la comunicación entre microservicios" "Istio"
+				baseDatosPagos = component "Base de Datos Transferencias" "Se encarga de almacenar las transferencias" "Oracle"
+				cachePagos = component "Base de Datos Cache Transferencias" "Otorga una caoa de cache para velocidad en las transferencias" "Redis"
                 
             }
             
@@ -113,6 +119,9 @@ workspace {
                 gestionDeRoles = component "Asignacion de Roles" {
                    controladorDeRoles -> this
                 }
+                implementacionAuth0 = component "Implementacion Auth0" "sistema robusto de gestión de identidades" "Auth0" {
+                    controladorUsuarios -> this
+                }
             }
             
             pagosNomina = container "Pagos de Nómina" "Componente encargado de gestionar los pagos de nómina a los empleados, permitiendo tanto pagos programados como masivos" "Java + Spring Boot" {
@@ -149,10 +158,15 @@ workspace {
 					brokerPagosNomina -> this
 					programarPagoNomina -> this
 				}
+				serviceMeshNomina = component "Service Mesh Transferencias" "Malla de servicios para la gestión de la comunicación entre microservicios" "Istio"
+				baseDatosNomina = component "Base de Datos Transferencias" "Se encarga de almacenar las transferencias" "Oracle"
+				cacheNomina = component "Base de Datos Cache Transferencias" "Otorga una caoa de cache para velocidad en las transferencias" "Redis"
 			}
 
             
             autorizaciones = container "Autorizaciones" {
+                policyEngine = component "Policy Engine (OPA - Open Policy Agent)" "motor de políticas que permita gestionar las reglas de autorización de manera dinámica, permitiendo una mayor flexibilidad y control." "Auth0"
+				BaseDatosNoSql = component "Base Datos No Sql" "Para almacenar grandes volúmenes de datos de autorizaciones y auditoría" "MongoDB"
                 webApp -> this
                 mobileApp -> this
                 transferencias -> this
@@ -175,6 +189,8 @@ workspace {
             }
             
             auditoria = container "Auditoria"{
+                siem = component "SIEM (Security Information and Event Management) Solution" "Para la monitorización en tiempo real y respuesta a incidentes de seguridad en base a los registros de auditoría." "SOC"
+				elk = component "Centralized Logging System (ELK Stack/Graylog)" "Para recolectar, analizar y monitorear logs centralizados, que faciliten la auditoría y el cumplimiento regulatorio." "Graphana"
                 pagos -> this
                 transferencias -> this
                 pagosNomina -> this 
