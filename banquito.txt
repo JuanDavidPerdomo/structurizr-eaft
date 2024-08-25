@@ -1,0 +1,245 @@
+workspace {
+
+    model {
+        user = person "User"
+        superFinanciera = person "Super Intendencia Financiera"
+        empresa = person "Empresa Juridica"
+        banquitoSystem = softwareSystem "Aplicación Banquito" {
+            webApp = container "Aplicacion Web" "Aplicación Web que permite la interacción de las acciones de los usuarios con el sistema" "Angular" {
+                user -> this "Uses"
+                empresa -> this "empresa"
+            }
+            mobileApp = container "Aplicacion Mobile" "Aplicación Mobile para el acceso a los servicios del sistema" "IoS / Android" {
+                user -> this "Uses"
+                empresa -> this "empresa"
+            }
+            transferencias = container "Transferencias" {
+                realizarTransferencia = component "Realizar Transferencia" {
+                    mobileApp -> this "Uses"
+                    webApp -> this "Uses"
+                }
+                validarCuenta = component "Validar Cuenta"
+                tranferenciaBancoAliado = component "Transferencia Banco Aliado" {
+                    realizarTransferencia -> this
+                }
+                transferenciaBancoExterno = component "Transferencia Banco Externo"{
+                    realizarTransferencia -> this
+                }
+                realizarDebitoBancoAliado = component  "Realizar Debito BancoAliado"
+                confirmarDebitoBancoAliado = component "confirmar Debito BancoAliado"
+                realizarAcreditacionBancoAliado = component "Realizar Acreditacion BancoAliado" 
+                confirmarAcreditacionBancoAliado  = component "Confirmar Acreditacion BancoAliado"
+                brokerBancoAliado = component "Broker Comunicacion Banco Aliado" {
+                    realizarDebitoBancoAliado -> this
+                    confirmarDebitoBancoAliado -> this
+                    realizarAcreditacionBancoAliado -> this
+                    confirmarAcreditacionBancoAliado -> this
+                }
+            }
+            pagos = container "Pagos Terceros" {
+                controladorPagoTercero = component "Realizar pago tercero" {
+                    mobileApp -> this "Uses"
+                    webApp -> this "Uses"
+                }
+                procesarPago = component "Broker procesar pago"{
+                    controladorPagoTercero -> this
+                }
+                 validarPago = component "Validar pago"{
+                     procesarPago -> this
+
+                }
+                almacenarPago = component "Almacenar pago"{
+                    procesarPago -> this
+                    validarPago -> this
+                }
+                pagoExterno = component "Integrador Pasarelas de pagos externa"{
+                    procesarPago -> this
+                    
+                # Este servicio tambien se relaciona con transferencias
+                }
+                serviciosTerceros = component "Integrador servicios externos"{
+                    procesarPago -> this
+                }
+                
+            }
+            
+            reportes = container "Reportes" "Permite la construcción y disponibilización automática de los reportes" "Apache Airflow" {
+                reporteTrimestralPersonas = component "Reporte Trimestral Personas Naturales"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this 
+                }
+                reporteTrimestralEmpresas = component "Reporte Trimestral Personas Jurídicas"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this 
+                }
+                reporteSemestralSuper = component "Reporte Semestral Superintendencia Financiera"{
+                    procesarPago -> this
+                    brokerBancoAliado -> this 
+                }
+                
+            }
+            
+            gestionDeUsuarios = container "Gestion de Usuarios" {
+                controladorUsuarios = component "Controlador Nuevo Usuario" {
+                    mobileApp -> this "Uses"
+                    webApp -> this "Uses"
+                }
+                validarExistenciaPrevia = component "Validar Existencia Previa" {
+                   controladorUsuarios -> this 
+                }
+                crearUsuarioNatural = component "Crear Usuario Natural" {
+                   controladorUsuarios -> this 
+                }
+                crearUsuarioJuridico = component "Crear Usuario Juridico" {
+                   controladorUsuarios -> this 
+                }
+                cargaDeEmpleados = component "Cargar Empleados Nomina" {
+                   crearUsuarioJuridico -> this
+                }
+                crearBilletera = component "Crear Billetera Usuario" {
+                    controladorUsuarios -> this
+                }
+                asociarBancosAliados = component "Asociar Bancos Aliados" {
+                    controladorUsuarios -> this
+                }               
+                controladorDeRoles = component "Controlador de Roles" {
+                    webApp -> this "Uses"
+                    controladorUsuarios -> this
+                }
+                gestionDeRoles = component "Asignacion de Roles" {
+                   controladorDeRoles -> this
+                }
+            }
+            
+            pagosNomina = container "Pagos de Nómina" {
+                controladorPagoNomina = component "Servicio de Pago de Nómina" {
+                    mobileApp -> this "Uses"
+                    webApp -> this "Uses"
+                }
+                
+                validarEmpleadosEmpresa = component "Validar Empleados de Empresa" 
+                
+                procesarPagoNomina = component "Procesar Pago de Nómina" {
+                    controladorPagoNomina -> this
+                }
+                
+                registrarPagoNomina = component "Registrar Pago de Nómina" {
+                    procesarPagoNomina -> this
+                }
+                
+                programarPagoNomina = component "Programar Pago de Nómina" {
+                    procesarPagoNomina -> this
+                }
+            
+                cargaMasivaNomina = component "Carga Masiva de Empleados" {
+                    procesarPagoNomina -> this 
+                    this -> validarEmpleadosEmpresa
+                }
+            
+                brokerPagosNomina = component "Broker Pagos de Nómina" {
+                    procesarPagoNomina -> this
+                    
+                }
+            
+                
+            
+                pagoNomina = component "Pago de Nómina Masiva" {
+                    brokerPagosNomina -> this
+                    programarPagoNomina -> this
+                }
+                
+                
+            }
+            
+            autorizaciones = container "Autorizaciones" {
+                webApp -> this
+                mobileApp -> this
+                transferencias -> this
+                pagos -> this
+                reportes -> this
+                gestionDeUsuarios -> this
+                pagosNomina -> this
+            }
+            
+            notificaciones = container "Integrador servicio Notificaciones"{
+                controladorNotificaciones = component "Controlador de Notificaciones"
+                servicioNotificaciones  = component "Servicio de Envio de Notificaciones"
+                brokerNotificaciones  = component "Borker de Notificaciones" {
+                    servicioNotificaciones -> this
+                    controladorNotificaciones -> this
+                }
+                pagos -> this
+                transferencias -> this
+                gestionDeUsuarios -> this
+            }
+            
+            auditoria = container "Auditoria"{
+                pagos -> this
+                transferencias -> this
+                pagosNomina -> this 
+                notificaciones -> this
+                gestionDeUsuarios -> this
+            }
+            
+            pagoNomina -> realizarTransferencia
+
+        }
+        bancoAliadoSystem = softwareSystem "Banco Aliado Sistema"
+        achAliadosystem = softwareSystem "Sistema de ACH"
+        mensajeria = softwareSystem "mensajería"{
+            reporteTrimestralPersonas -> this
+            reporteTrimestralEmpresas -> this
+            reporteSemestralSuper -> this
+        }
+        
+        banquitoSystem -> bancoAliadoSystem
+        banquitoSystem -> achAliadosystem
+        banquitoSystem -> superFinanciera
+        bancoAliadoSystem -> brokerBancoAliado
+    }
+
+    views {
+        systemContext banquitoSystem {
+            include *
+            autolayout lr
+        }
+        
+
+        container banquitoSystem {
+            include *
+            autolayout lr
+        }
+        
+        component transferencias {
+            include *
+            autolayout lr
+        }
+        component pagos {
+            include *
+            autolayout lr
+        }
+        
+        component reportes {
+            include *
+            autolayout lr
+        }
+        
+        component pagosNomina {
+            include *
+            autolayout lr
+        }
+        
+        component notificaciones {
+            include *
+            autolayout lr
+        }
+        
+        component gestionDeUsuarios {
+            include *
+            autolayout lr
+        }
+
+        theme default
+    }
+
+}
