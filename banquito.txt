@@ -73,7 +73,7 @@ workspace {
                 
             }
             
-            gestionDeUsuarios = container "Gestion de Usuarios" "Componente encargado de crear usuarios y los roles de los mimos" "Java" {
+            gestionDeUsuarios = container "Gestion de Usuarios" "Componente encargado de crear usuarios y los roles de los mismos" "Java" {
                 controladorUsuarios = component "Controlador Nuevo Usuario" {
                     mobileApp -> this "Uses"
                     webApp -> this "Uses"
